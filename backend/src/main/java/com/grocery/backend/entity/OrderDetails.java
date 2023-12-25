@@ -27,10 +27,14 @@ public class OrderDetails {
 
     @Getter
     @Setter
-    private double orderAmount;
+    private double productAmount;
 
     @Getter
     @Setter
-    private ArrayList<Map<Product, Integer>> orderItems;
+    private String productID;
+
+    @Getter
+    @Setter
+    private int quantity;
 
 }

@@ -26,10 +26,14 @@ public class Cart {
 
     @Getter
     @Setter
-    private double cartAmount;
+    private double productAmount;
 
     @Getter
     @Setter
-    private ArrayList<Map<Product, Integer>> cartItems;
+    private String productID;
+
+    @Getter
+    @Setter
+    private int quantity;
 
 }

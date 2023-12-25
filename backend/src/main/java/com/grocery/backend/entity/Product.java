@@ -11,10 +11,6 @@ import java.util.UUID;
 
 
 abstract public class Product {
-    @Id
-    @Getter
-    @Setter
-    private String productID = UUID.randomUUID().toString().substring(0, 10);
 
     @Getter
     @Setter
