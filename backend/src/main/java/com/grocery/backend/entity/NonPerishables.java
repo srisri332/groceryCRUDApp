@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -17,4 +18,24 @@ public class NonPerishables extends Product {
     @Getter
     @Setter
     private String productID = UUID.randomUUID().toString().substring(0, 10);
+
+    @Getter
+    @Setter
+    private String productName;
+
+    @Getter
+    @Setter
+    private double productPrice;
+
+    @Getter
+    @Setter
+    private String productImage;
+
+    @Getter
+    @Setter
+    private LocalDateTime manufacturedDate;
+
+    @Getter
+    @Setter
+    private String category;
 }

@@ -1,72 +1,144 @@
 package com.grocery.backend.controller;
 
+import com.grocery.backend.entity.CartItem;
+import com.grocery.backend.entity.NonPerishables;
+import com.grocery.backend.entity.Perishables;
+import com.grocery.backend.service.MainService;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @RestController
 public class MainController {
 
+    @Autowired
+    MainService mainService;
+
     @GetMapping("/cart")
-    public String cartDetails(){
-        return "cart";
+    public List<CartItem> cartDetails() {
+        return mainService.getCartItems();
     }
 
-    @PostMapping("/cart")
-    public String updateCartDetails(){
-        return "cart confirm";
+    @PostMapping(path = "/cart", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String updateCartDetails(@RequestBody String request) {
+        JSONObject requestJson = new JSONObject(request);
+        String[] keys = JSONObject.getNames(requestJson);
+        String res = "Error";
+
+        try {
+            res = mainService.addOrUpdateCartItems(requestJson);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return res;
     }
 
     @DeleteMapping("/cart")
-    public String deleteItemsInCart(){
+    public String deleteItemsInCart() {
         return "cart delete";
     }
 
     @GetMapping("/order")
-    public String orderDetails(){
+    public String orderDetails() {
         return "order";
     }
 
     @PostMapping("/order")
-    public String updateOrderDetails(){
+    public String updateOrderDetails() {
         return "order confirm";
     }
 
     @DeleteMapping("/order")
-    public String deleteItemsInOrder(){
+    public String deleteItemsInOrder() {
         return "order delete";
     }
 
     @GetMapping("/perishable")
-    public String perishableDetails(){
-        return "perishable";
+    public List<Perishables> perishableDetails() {
+        return mainService.getPerishableProducts();
     }
 
     @PostMapping("/perishable")
-    public String updatePerishableDetails(){
+    public String addOrUpdatePerishable(@RequestParam("productImage") MultipartFile productImage,
+                                        @RequestParam("manufacturedDate") String manufacturedDate,
+                                        @RequestParam("expiryDate") String expiryDate,
+                                        @RequestParam("productName") String productName,
+                                        @RequestParam("productPrice") double productPrice) {
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+        LocalDateTime manufacturedDateConv = LocalDateTime.parse(manufacturedDate, formatter);
+        LocalDateTime expiryDateConv = LocalDateTime.parse(expiryDate, formatter);
+        try {
+            mainService.addProduct(productImage, manufacturedDateConv, expiryDateConv, productName, productPrice);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         return "perishable confirm";
     }
 
     @DeleteMapping("/perishable")
-    public String deletePerishableItem(){
+    public String deletePerishableItem() {
         return "perishable delete";
     }
 
     @GetMapping("/nonperishable")
-    public String nonPerishableDetails(){
-        return "nonperishable";
+    public List<NonPerishables> nonPerishableDetails() {
+        return mainService.getNonPerishableProducts();
     }
 
     @PostMapping("/nonperishable")
-    public String updateNonPerishableDetails(){
+    public String addOrUpdateNonPerishable(@RequestParam("productImage") MultipartFile productImage,
+                                           @RequestParam("manufacturedDate") String manufacturedDate,
+                                           @RequestParam("productName") String productName,
+                                           @RequestParam("productPrice") double productPrice) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+        LocalDateTime manufacturedDateConv = LocalDateTime.parse(manufacturedDate, formatter);
+        try {
+            mainService.addProduct(productImage, manufacturedDateConv, productName, productPrice);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         return "nonperishable confirm";
     }
 
     @DeleteMapping("/nonperishable")
-    public String deleteNonPerishableItem(){
+    public String deleteNonPerishableItem() {
         return "nonperishable delete";
     }
 
     @PostMapping("/payment")
-    public String confirmPayment(){
+    public String confirmPayment() {
         return "nonperishable confirm";
+    }
+
+    @PostMapping("/image")
+    public String uploadImage(@RequestParam("productImage") MultipartFile productImage) {
+//        try {
+//            mainService.addProduct(productImage);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+        return "upload";
+    }
+
+    @GetMapping("/image")
+    public ResponseEntity<?> fetchImage() {
+        byte[] imageDate = null;
+        try {
+            imageDate = mainService.getImage("wall.jpeg");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.valueOf("image/png")).body(imageDate);
     }
 }

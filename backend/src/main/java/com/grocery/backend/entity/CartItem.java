@@ -7,14 +7,12 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.UUID;
 
 @Data
 @Entity
 @Table(name = "cart")
-public class Cart {
+public class CartItem {
     @Id
     @Getter
     @Setter
