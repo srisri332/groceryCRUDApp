@@ -10,8 +10,8 @@ import org.springframework.data.repository.query.Param;
 public interface CartRepository extends JpaRepository<CartItem, String> {
     @Modifying
     @Transactional
-    @Query(value = "UPDATE CartItem SET quantity= :quantity WHERE (productID = :productid)")
-    public int updateCartValues(@Param("productid") String productid, @Param("quantity") int quantity);
+    @Query(value = "UPDATE CartItem SET quantity= :quantity, productAmount= :productAmount  WHERE (productID = :productid)")
+    public int updateCartValues(@Param("productid") String productid, @Param("quantity") int quantity, @Param("productAmount") double productAmount);
 
     @Transactional
     public void deleteByProductID(String productID);

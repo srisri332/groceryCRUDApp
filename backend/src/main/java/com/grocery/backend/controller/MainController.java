@@ -6,6 +6,7 @@ import com.grocery.backend.entity.Perishables;
 import com.grocery.backend.service.MainService;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -31,7 +33,6 @@ public class MainController {
     @PostMapping(path = "/cart", produces = MediaType.APPLICATION_JSON_VALUE)
     public String updateCartDetails(@RequestBody String request) {
         JSONObject requestJson = new JSONObject(request);
-        String[] keys = JSONObject.getNames(requestJson);
         String res = "Error";
 
         try {
@@ -53,9 +54,18 @@ public class MainController {
         return "order";
     }
 
-    @PostMapping("/order")
-    public String updateOrderDetails() {
-        return "order confirm";
+    @PostMapping(path = "/order", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String updateOrderDetails(@RequestBody String request) {
+        JSONObject requestJson = new JSONObject(request);
+        String res = "Error";
+
+        try {
+            res = mainService.confirmOrder(requestJson);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return res;
     }
 
     @DeleteMapping("/order")
@@ -75,9 +85,9 @@ public class MainController {
                                         @RequestParam("productName") String productName,
                                         @RequestParam("productPrice") double productPrice) {
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
-        LocalDateTime manufacturedDateConv = LocalDateTime.parse(manufacturedDate, formatter);
-        LocalDateTime expiryDateConv = LocalDateTime.parse(expiryDate, formatter);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+        LocalDate manufacturedDateConv = LocalDate.parse(manufacturedDate, formatter);
+        LocalDate expiryDateConv = LocalDate.parse(expiryDate, formatter);
         try {
             mainService.addProduct(productImage, manufacturedDateConv, expiryDateConv, productName, productPrice);
         } catch (IOException e) {
@@ -102,7 +112,7 @@ public class MainController {
                                            @RequestParam("productName") String productName,
                                            @RequestParam("productPrice") double productPrice) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
-        LocalDateTime manufacturedDateConv = LocalDateTime.parse(manufacturedDate, formatter);
+        LocalDate manufacturedDateConv = LocalDate.parse(manufacturedDate, formatter);
         try {
             mainService.addProduct(productImage, manufacturedDateConv, productName, productPrice);
         } catch (IOException e) {

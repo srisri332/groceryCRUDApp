@@ -1,11 +1,7 @@
 package com.grocery.backend.service;
 
-import com.grocery.backend.entity.CartItem;
-import com.grocery.backend.entity.NonPerishables;
-import com.grocery.backend.entity.Perishables;
-import com.grocery.backend.repository.CartRepository;
-import com.grocery.backend.repository.NonPerishableRepository;
-import com.grocery.backend.repository.PerishableRepository;
+import com.grocery.backend.entity.*;
+import com.grocery.backend.repository.*;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,9 +11,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -31,6 +27,15 @@ public class MainService {
 
     @Autowired
     NonPerishableRepository nonPerishableRepository;
+
+    @Autowired
+    OrderRepository orderRepository;
+
+    @Autowired
+    OrderDetailsRepository orderDetailsRepository;
+
+    @Autowired
+    PaymentRepository paymentRepository;
 
     static final String userID = "admin";
     static final String folder = "C:/photos/";
@@ -46,7 +51,7 @@ public class MainService {
     //Polymorphism
     //Logic to save Non-Perishable product details in DB
     public String addProduct(MultipartFile productImage,
-                             LocalDateTime manufacturedDate, String productName, double productPrice) throws IOException {
+                             LocalDate manufacturedDate, String productName, double productPrice) throws IOException {
         byte[] bytes = productImage.getBytes();
         Path path = Paths.get(folder + productImage.getOriginalFilename());
         Files.write(path, bytes);
@@ -63,7 +68,7 @@ public class MainService {
 
     //Logic to save Perishable product details in DB
     public String addProduct(MultipartFile productImage,
-                             LocalDateTime manufacturedDate, LocalDateTime expiryDate, String productName, double productPrice) throws IOException {
+                             LocalDate manufacturedDate, LocalDate expiryDate, String productName, double productPrice) throws IOException {
         byte[] bytes = productImage.getBytes();
         Path path = Paths.get(folder + productImage.getOriginalFilename());
         Files.write(path, bytes);
@@ -102,13 +107,23 @@ public class MainService {
             currentCartItems.add(productID);
             boolean isInDB = cartItemsInDB.stream().anyMatch(o -> o.getProductID().equals(productID));
             Object quantity = requestJson.get(productID);
+            double singleProductPrice = 0;
+
+            try{
+                 singleProductPrice = perishableRepository.findPriceOfProduct(productID);
+            }catch (Exception e){
+                singleProductPrice = nonPerishableRepository.findPriceOfProduct(productID);
+            }
+
+            double totalProductsPrice = singleProductPrice * (Integer) quantity;
             if (isInDB) {
-                cartRepository.updateCartValues(productID, (Integer) quantity);
+                cartRepository.updateCartValues(productID, (Integer) quantity, totalProductsPrice);
             } else {
                 CartItem cartItem = new CartItem();
                 cartItem.setUserID(userID);
                 cartItem.setProductID(productID);
                 cartItem.setQuantity((Integer) quantity);
+                cartItem.setProductAmount(totalProductsPrice);
                 cartRepository.save(cartItem);
             }
         }
@@ -126,5 +141,47 @@ public class MainService {
         return cartRepository.findAll();
     }
 
+    public String confirmOrder(JSONObject requestJson){
+
+        Order newOrder = new Order();
+        newOrder.setUserID(userID);
+        newOrder.setOrderDate(LocalDateTime.now());
+        newOrder.setStatus("Placed");
+        orderRepository.save(newOrder);
+
+        double totalOrderAmount = 0;
+        String[] keys = JSONObject.getNames(requestJson);
+        for (String productID : keys) {
+            double singleProductPrice = 0;
+            Object quantity = requestJson.get(productID);
+
+            try{
+                singleProductPrice = perishableRepository.findPriceOfProduct(productID);
+            }catch (Exception e){
+                singleProductPrice = nonPerishableRepository.findPriceOfProduct(productID);
+            }
+            double totalProductsPrice = singleProductPrice * (Integer) quantity;
+            totalOrderAmount += totalProductsPrice;
+
+            OrderDetails newOrderDetails = new OrderDetails();
+            newOrderDetails.setProductID(productID);
+            newOrderDetails.setQuantity((Integer) quantity);
+            newOrderDetails.setOrderID(newOrder.getOrderID());
+            newOrderDetails.setProductAmount(totalProductsPrice);
+            orderDetailsRepository.save(newOrderDetails);
+        }
+
+        confirmPayment(newOrder.getOrderID(), totalOrderAmount);
+
+        return newOrder.getOrderID();
+    }
+
+    public String confirmPayment(String orderID, double orderAmout){
+        Payment newPayment = new Payment();
+        newPayment.setOrderID(orderID);
+        newPayment.setAmount(orderAmout);
+        paymentRepository.save(newPayment);
+        return "Success";
+    }
 
 }
