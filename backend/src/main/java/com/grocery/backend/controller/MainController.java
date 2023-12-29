@@ -78,7 +78,7 @@ public class MainController {
         return mainService.getPerishableProducts();
     }
 
-    @PostMapping("/perishable")
+    @PostMapping(path = "/perishable", produces = MediaType.APPLICATION_JSON_VALUE)
     public String addOrUpdatePerishable(@RequestParam("productImage") MultipartFile productImage,
                                         @RequestParam("manufacturedDate") String manufacturedDate,
                                         @RequestParam("expiryDate") String expiryDate,
@@ -141,11 +141,11 @@ public class MainController {
         return "upload";
     }
 
-    @GetMapping("/image")
-    public ResponseEntity<?> fetchImage() {
+    @GetMapping("/image/{productImage}")
+    public ResponseEntity<?> fetchImage(@PathVariable String productImage) {
         byte[] imageDate = null;
         try {
-            imageDate = mainService.getImage("wall.jpeg");
+            imageDate = mainService.getImage(productImage);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

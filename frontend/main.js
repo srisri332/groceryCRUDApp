@@ -1,28 +1,72 @@
 
+const table = new DataTable('#products', {
+        columns: [
+                {
+                        data: "image",
+                        render: function (data, type, row) {
+                                return `<img src="${row[0]}" alt="img" width="150" height="100">`
+                        }
+                },
+                {
+                        data: "name",
+                        render: function (data, type, row) {
+                                return '<p>' + row[1] + '</p>'
+                        }
+                },
+                {
+                        data: "price",
+                        render: function (data, type, row) {
+                                return '<p>' + row[2] + '</p>'
+                        }
+                },
+                {
+                        data: "id",
+                        render: function (data, type, row) {
+                                return '<p>' + row[3] + '</p>'
+                        }
+                },
+                {
+                        data: "manufacturedDate",
+                        render: function (data, type, row) {
+                                return '<p>' + row[4] + '</p>'
+                        }
+                },
+                {
+                        data: "expiryDate",
+                        render: function (data, type, row) {
+                                return '<p>' + row[5] + '</p>'
+                        }
+                },
+        ]
+});
 
-const table = new DataTable('#products');
-
-function loadTableData() {
+async function loadTableData() {
         fetch('http://localhost:8080/perishable')
                 .then(response => response.json())
                 .then(json => {
                         for (i = 0; i < json.length; i++) {
-
-                                table.row
-                                        .add([
-                                                json[i].productImage,
-                                                json[i].productName,
-                                                json[i].productPrice,
-                                                json[i].productID,
-                                                json[i].manufacturedDate,
-                                                json[i].expiryDate
-                                        ])
-                                        .draw(true);
+                                let imageSource = "#"
+                               console.log(json)
+                                toDataURL(`http://localhost:8080/image/${json[i].productImage}`, function (dataUrl) {
+                                        imageSource = dataUrl;
+                                        table.row
+                                                .add([
+                                                        imageSource,
+                                                        json[i].productName,
+                                                        json[i].productPrice,
+                                                        json[i].productID,
+                                                        json[i].manufacturedDate,
+                                                        json[i].expiryDate
+                                                ])
+                                                .draw(true);
+                                })
+                                
+                                
 
                         }
                 })
 
-        fetch('http://localhost:8080/nonperishable')
+       fetch('http://localhost:8080/nonperishable')
                 .then(response => response.json())
                 .then(json => {
                         for (i = 0; i < json.length; i++) {
@@ -43,6 +87,8 @@ function loadTableData() {
 
 };
 
+
+//logic to send form details from adding a new product
 const addProductForm = document.querySelector("#add-product");
 
 async function sendData() {
@@ -54,7 +100,7 @@ async function sendData() {
                         // Set the FormData instance as the request body
                         body: formData,
                 });
-                console.log(await response.json());
+                console.log(await response);
                 location.reload();
         } catch (e) {
                 console.error(e);
@@ -67,10 +113,25 @@ addProductForm.addEventListener("submit", (event) => {
         sendData();
 });
 
-window.onload = function () {
+async function toDataURL(url, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.onload = function () {
+                var reader = new FileReader();
+                reader.onloadend = function () {
+                        callback(reader.result);
+                }
+                reader.readAsDataURL(xhr.response);
+        };
+        await xhr.open('GET', url);
+        xhr.responseType = 'blob';
+        xhr.send();
+}
+
+window.onload = async function () {
         $('#datepicker').datepicker();
         $('#expirydatepicker').datepicker();
-        loadTableData();
+
+        await loadTableData();
 }
 
 
