@@ -10,4 +10,15 @@ public interface NonPerishableRepository extends JpaRepository<NonPerishables, S
     @Transactional
     @Query(value = "SELECT productPrice FROM NonPerishables where productID=:productid")
     public double findPriceOfProduct(@Param("productid") String productid);
+
+    @Transactional
+    @Query(value = "SELECT productImage FROM NonPerishables where productID=:productid")
+    public String findImageOfProduct(@Param("productid") String productid);
+
+    @Transactional
+    @Query(value = "SELECT productName FROM NonPerishables where productID=:productid")
+    public String findNameOfProduct(@Param("productid") String productid);
+
+    @Transactional
+    public void deleteByProductID(String productID);
 }

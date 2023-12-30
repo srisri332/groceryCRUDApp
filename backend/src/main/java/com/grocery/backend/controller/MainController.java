@@ -97,7 +97,8 @@ public class MainController {
     }
 
     @DeleteMapping("/perishable")
-    public String deletePerishableItem() {
+    public String deletePerishableItem(@RequestParam("productID") String productID) {
+        mainService.removePerishableProduct(productID);
         return "perishable delete";
     }
 
@@ -111,7 +112,7 @@ public class MainController {
                                            @RequestParam("manufacturedDate") String manufacturedDate,
                                            @RequestParam("productName") String productName,
                                            @RequestParam("productPrice") double productPrice) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
         LocalDate manufacturedDateConv = LocalDate.parse(manufacturedDate, formatter);
         try {
             mainService.addProduct(productImage, manufacturedDateConv, productName, productPrice);
@@ -122,7 +123,8 @@ public class MainController {
     }
 
     @DeleteMapping("/nonperishable")
-    public String deleteNonPerishableItem() {
+    public String deleteNonPerishableItem(@RequestParam("productID") String productID) {
+        mainService.removeNonPerishableProduct(productID);
         return "nonperishable delete";
     }
 

@@ -94,6 +94,33 @@ public class MainService {
         return allNonPerishableProducts;
     }
 
+    public String removePerishableProduct(String productID){
+        try{
+            List<CartItem> cartItemsInDB = cartRepository.findAll();
+            boolean isInCart = cartItemsInDB.stream().anyMatch(o -> o.getProductID().equals(productID));
+            if(isInCart){
+                deleteProductInCart(productID);
+            }
+            perishableRepository.deleteByProductID(productID);
+            return "removed";
+        }catch (Exception e){
+            return "error";
+        }
+    }
+
+    public String removeNonPerishableProduct(String productID){
+        try{
+            List<CartItem> cartItemsInDB = cartRepository.findAll();
+            boolean isInCart = cartItemsInDB.stream().anyMatch(o -> o.getProductID().equals(productID));
+            if(isInCart){
+                deleteProductInCart(productID);
+            }
+            nonPerishableRepository.deleteByProductID(productID);
+            return "removed";
+        }catch (Exception e){
+            return "error";
+        }
+    }
 
     //Logic to add / update / remove cart items in DB for admin user
     public String addOrUpdateCartItems(JSONObject requestJson) {
@@ -108,30 +135,48 @@ public class MainService {
             boolean isInDB = cartItemsInDB.stream().anyMatch(o -> o.getProductID().equals(productID));
             Object quantity = requestJson.get(productID);
             double singleProductPrice = 0;
+            String productImage = "";
+            String productName = "";
 
             try{
                  singleProductPrice = perishableRepository.findPriceOfProduct(productID);
+                 productImage = perishableRepository.findImageOfProduct(productID);
+                 productName = perishableRepository.findNameOfProduct(productID);
             }catch (Exception e){
                 singleProductPrice = nonPerishableRepository.findPriceOfProduct(productID);
+                productImage = nonPerishableRepository.findImageOfProduct(productID);
+                productName = nonPerishableRepository.findNameOfProduct(productID);
             }
 
-            double totalProductsPrice = singleProductPrice * (Integer) quantity;
+            double totalProductsPrice = singleProductPrice * Integer.parseInt((String) quantity);
             if (isInDB) {
-                cartRepository.updateCartValues(productID, (Integer) quantity, totalProductsPrice);
+                cartRepository.updateCartValues(productID, Integer.parseInt((String) quantity), totalProductsPrice);
             } else {
                 CartItem cartItem = new CartItem();
                 cartItem.setUserID(userID);
+                cartItem.setProductName(productName);
+                cartItem.setProductImage(productImage);
                 cartItem.setProductID(productID);
-                cartItem.setQuantity((Integer) quantity);
+                cartItem.setQuantity(Integer.parseInt((String) quantity));
                 cartItem.setProductAmount(totalProductsPrice);
                 cartRepository.save(cartItem);
             }
         }
 
-        for (CartItem singleItem : cartItemsInDB) {
-            if (!currentCartItems.contains(singleItem.getProductID())) {
-                cartRepository.deleteByProductID(singleItem.getProductID());
-            }
+//        for (CartItem singleItem : cartItemsInDB) {
+//            if (!currentCartItems.contains(singleItem.getProductID())) {
+//                cartRepository.deleteByProductID(singleItem.getProductID());
+//            }
+//        }
+
+        return "Success";
+    }
+
+    public String deleteProductInCart(String productID){
+        try{
+            cartRepository.deleteByProductID(productID);
+        }catch (Exception e){
+            return "error";
         }
 
         return "Success";
@@ -169,6 +214,8 @@ public class MainService {
             newOrderDetails.setOrderID(newOrder.getOrderID());
             newOrderDetails.setProductAmount(totalProductsPrice);
             orderDetailsRepository.save(newOrderDetails);
+
+            deleteProductInCart(productID);
         }
 
         confirmPayment(newOrder.getOrderID(), totalOrderAmount);

@@ -15,4 +15,15 @@ public interface PerishableRepository extends JpaRepository<Perishables, String>
     @Transactional
     @Query(value = "SELECT productPrice FROM Perishables where productID=:productid")
     public double findPriceOfProduct(@Param("productid") String productid);
+
+    @Transactional
+    @Query(value = "SELECT productImage FROM Perishables where productID=:productid")
+    public String findImageOfProduct(@Param("productid") String productid);
+
+    @Transactional
+    @Query(value = "SELECT productName FROM Perishables where productID=:productid")
+    public String findNameOfProduct(@Param("productid") String productid);
+
+    @Transactional
+    public void deleteByProductID(String productID);
 }

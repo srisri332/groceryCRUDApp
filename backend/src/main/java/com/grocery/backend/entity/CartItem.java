@@ -34,4 +34,12 @@ public class CartItem {
     @Setter
     private int quantity;
 
+    @Getter
+    @Setter
+    private String productImage;
+
+    @Getter
+    @Setter
+    private String productName;
+
 }

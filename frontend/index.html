@@ -69,79 +69,180 @@
                                                         <th>ID</th>
                                                         <th>Manufactured Date</th>
                                                         <th>Expirty Date</th>
-                                                        <!-- <th>Quantity</th>
-                                                        <th></th> -->
+                                                        <th></th>
                                                 </tr>
                                         </thead>
                                         <tbody id="product-table-body"></tbody>
                                         <tfoot></tfoot>
                                 </table>
+                        </div>
 
-
-                                <form>
-                                        <button type="submit" class="btn btn-primary mb-1 mt-1 ms-1 me-1">Add to
-                                                Cart</button>
-                                </form>
-
+                        <!-- Modal -->
+                        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                                aria-hidden="true">
+                                <div class="modal-dialog">
+                                        <div class="modal-content">
+                                                <div class="modal-header">
+                                                        <h5 class="modal-title" id="exampleModalLabel"></h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                                aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                        <div class="mb-3 mt-3 ms-3 me-3">
+                                                                <label for="selectQuantity"
+                                                                        class="form-label">Quantity</label>
+                                                                <input type="text" class="form-control"
+                                                                        id="selectQuantity" name="selectQuantity"
+                                                                        placeholder="1" required>
+                                                        </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary"
+                                                                data-bs-dismiss="modal">Close</button>
+                                                        <button type="button" class="btn btn-primary"
+                                                                id="add-button">Add</button>
+                                                </div>
+                                        </div>
+                                </div>
                         </div>
                 </div>
-        </div>
 
-
-        <!-- Code for Products tab -->
-        <div class="tab-pane fade" id="products-tab-pane" role="tabpanel" aria-labelledby="products-tab" tabindex="0">
-                <form id="add-product">
-                        <div class="mb-3 mt-3 ms-3 me-3">
-                                <label for="productImage" class="form-label">Choose Product Image</label>
-                                <input class="form-control" type="file" id="productImage" name="productImage" required>
-                        </div>
-                        <div class="mb-3 mt-3 ms-3 me-3">
-                                <label for="productName" class="form-label">Name</label>
-                                <input type="text" class="form-control" id="productName" name="productName" placeholder="Eg: Tomatoes" required>
-                        </div>
-                        <div class="mb-3 mt-3 ms-3 me-3">
-                                <label for="productPrice" class="form-label">Price</label>
-                                <input type="number" class="form-control" id="productPrice" name="productPrice" placeholder="Rupees" required>
-                        </div>
-                        <div class="mb-3 mt-3 ms-3 me-3">
-                                <label for="manufacturedDate" class="form-label">Manufactured Date</label>
-                                <div class="input-group date" id="datepicker">
-                                        <input type="text" class="form-control" id="manufacturedDate" name="manufacturedDate" required/>
-                                        <span class="input-group-append">
-                                                <span class="input-group-text bg-dark d-block">
-                                                        <i class="fa fa-calendar"></i>
+                <!-- Code for Products tab -->
+                <div class="tab-pane fade" id="products-tab-pane" role="tabpanel" aria-labelledby="products-tab"
+                        tabindex="0">
+                        <form id="add-product">
+                                <div class="mb-3 mt-3 ms-3 me-3">
+                                        <label for="productImage" class="form-label">Choose Product Image</label>
+                                        <input class="form-control" type="file" id="productImage" name="productImage"
+                                                required>
+                                </div>
+                                <div class="mb-3 mt-3 ms-3 me-3">
+                                        <label for="productName" class="form-label">Name</label>
+                                        <input type="text" class="form-control" id="productName" name="productName"
+                                                placeholder="Eg: Tomatoes" required>
+                                </div>
+                                <div class="mb-3 mt-3 ms-3 me-3">
+                                        <label for="productPrice" class="form-label">Price</label>
+                                        <input type="number" class="form-control" id="productPrice" name="productPrice"
+                                                placeholder="Rupees" required>
+                                </div>
+                                <div class="mb-3 mt-3 ms-3 me-3">
+                                        <label for="manufacturedDate" class="form-label">Manufactured Date</label>
+                                        <div class="input-group date" id="datepicker">
+                                                <input type="text" class="form-control" id="manufacturedDate"
+                                                        name="manufacturedDate" required />
+                                                <span class="input-group-append">
+                                                        <span class="input-group-text bg-dark d-block">
+                                                                <i class="fa fa-calendar"></i>
+                                                        </span>
                                                 </span>
-                                        </span>
+                                        </div>
+                                </div>
+                                <div class="mb-3 mt-3 ms-3 me-3">
+                                        <label for="expiryDate" class="form-label">Expiry Date</label>
+                                        <div class="input-group date" id="expirydatepicker">
+                                                <input type="text" class="form-control" id="expiryDate"
+                                                        name="expiryDate" required />
+                                                <span class="input-group-append">
+                                                        <span class="input-group-text bg-dark d-block">
+                                                                <i class="fa fa-calendar"></i>
+                                                        </span>
+                                                </span>
+                                        </div>
+                                </div>
+                                <div class="mb-3 mt-3 ms-3 me-3">
+                                        <label for="productCategory" class="form-label">Category</label>
+                                        <select id="productCategory" class="form-select"
+                                                aria-label="Default select example" onchange="setCategory()">
+                                                <option selected value="perishable">Perishable</option>
+                                                <option value="non-perishable">Non Perishable</option>
+                                        </select>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary mb-3 mt-3 ms-3 me-3">Submit</button>
+                                <hr class="  border  border-2 border-top " />
+
+                                <div class="mb-3 mt-5 ms-4 me-4">
+                                        <table id="edit-products" class="display " style="width:100%">
+                                                <thead>
+                                                        <tr>
+                                                                <th>Image</th>
+                                                                <th>Name</th>
+                                                                <th>ID</th>
+                                                                <th>Remove</th>
+                                                        </tr>
+                                                </thead>
+                                                <tbody id="edit-products-table-body"></tbody>
+
+                                        </table>
+                                </div>
+
+                        </form>
+                </div>
+
+                <!-- Code for Cart tab -->
+                <div class="tab-pane fade" id="cart-tab-pane" role="tabpanel" aria-labelledby="cart-tab" tabindex="0">
+
+                      
+                        <div class="alert alert-secondary mb-3 mt-3 ms-3 me-3" role="alert">
+                                <h6 id="cart-value" ></h6>
+                                <button type="button" onclick="confirmOrder()" class="btn btn-light mb-3 mt-3 ms-3 me-3">Place Order</button>
+                        </div>
+
+                        <div class="mb-3 mt-3 ms-3 me-3">
+                                <table id="cart" class="display " style="width:100%">
+                                        <thead>
+                                                <tr>
+                                                        <th>Image</th>
+                                                        <th>Name</th>
+                                                        <th>Price</th>
+                                                        <th>Product ID</th>
+                                                        <th>Quantity</th>
+                                                        <th></th>
+                                                </tr>
+                                        </thead>
+                                        <tbody id="cart-table-body"></tbody>
+                                        <tfoot></tfoot>
+                                </table>
+                        </div>
+
+                        
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="updateCartModal" tabindex="-1" aria-labelledby="updateCartModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                        <div class="modal-content">
+                                                <div class="modal-header">
+                                                        <h5 class="modal-title" id="updateCartModalLabel"></h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                                aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                        <div class="mb-3 mt-3 ms-3 me-3">
+                                                                <label for="updateQuantity" class="form-label">Quantity</label>
+                                                                <input type="text" class="form-control" id="updateQuantity"
+                                                                        name="updateQuantity" placeholder="1" required>
+                                                        </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <button type="button" class="btn btn-primary" id="update-button">Update</button>
+                                                </div>
+                                        </div>
                                 </div>
                         </div>
-                        <div class="mb-3 mt-3 ms-3 me-3">
-                                <label for="expiryDate" class="form-label">Expiry Date</label>
-                                <div class="input-group date" id="expirydatepicker">
-                                        <input type="text" class="form-control" id="expiryDate" name="expiryDate"/>
-                                        <span class="input-group-append">
-                                                <span class="input-group-text bg-dark d-block">
-                                                        <i class="fa fa-calendar"></i>
-                                                </span>
-                                        </span>
-                                </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary mb-3 mt-3 ms-3 me-3">Submit</button>
-                </form>
-        </div>
+                </div>
 
-        <!-- Code for Cart tab -->
-        <div class="tab-pane fade" id="cart-tab-pane" role="tabpanel" aria-labelledby="cart-tab" tabindex="0">
-                ...
-        </div>
-
-        <!-- Code for Orders tab -->
-        <div class="tab-pane fade" id="orders-tab-pane" role="tabpanel" aria-labelledby="orders-tab" tabindex="0">...
-        </div>
+                <!-- Code for Orders tab -->
+                <div class="tab-pane fade" id="orders-tab-pane" role="tabpanel" aria-labelledby="orders-tab"
+                        tabindex="0">...
+                </div>
 
         </div>
 
         <script src="main.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+        <script
+                src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
 </body>
 
 </html>
