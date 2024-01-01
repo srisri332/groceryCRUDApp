@@ -37,4 +37,8 @@ public class OrderDetails {
     @Setter
     private int quantity;
 
+    @Getter
+    @Setter
+    private double amountOwed = 0;
+
 }

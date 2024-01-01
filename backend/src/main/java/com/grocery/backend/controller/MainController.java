@@ -1,8 +1,6 @@
 package com.grocery.backend.controller;
 
-import com.grocery.backend.entity.CartItem;
-import com.grocery.backend.entity.NonPerishables;
-import com.grocery.backend.entity.Perishables;
+import com.grocery.backend.entity.*;
 import com.grocery.backend.service.MainService;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,14 +42,15 @@ public class MainController {
         return res;
     }
 
-    @DeleteMapping("/cart")
-    public String deleteItemsInCart() {
+    @DeleteMapping("/cart/{productID}")
+    public String deleteItemsInCart(@PathVariable String productID) {
+        mainService.deleteProductInCart(productID);
         return "cart delete";
     }
 
     @GetMapping("/order")
-    public String orderDetails() {
-        return "order";
+    public List<Order> orderDetails() {
+        return mainService.getOrders();
     }
 
     @PostMapping(path = "/order", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -71,6 +70,16 @@ public class MainController {
     @DeleteMapping("/order")
     public String deleteItemsInOrder() {
         return "order delete";
+    }
+
+    @PostMapping(path = "/order-details", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String orderSingleOrderDetails(@RequestParam("orderID") String orderID) {
+        return mainService.getSingleOrderDetails(orderID).toString();
+    }
+
+    @PutMapping("/order-details")
+    public void updateProcessedOrder(@RequestParam("orderID") String orderID, @RequestParam("productID") String productID, @RequestParam("quantity") int quantity){
+        mainService.updateProcessedOrder(orderID,productID,quantity);
     }
 
     @GetMapping("/perishable")

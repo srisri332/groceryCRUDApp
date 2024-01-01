@@ -2,6 +2,7 @@ package com.grocery.backend.service;
 
 import com.grocery.backend.entity.*;
 import com.grocery.backend.repository.*;
+import org.aspectj.weaver.ast.Or;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -134,6 +135,12 @@ public class MainService {
             currentCartItems.add(productID);
             boolean isInDB = cartItemsInDB.stream().anyMatch(o -> o.getProductID().equals(productID));
             Object quantity = requestJson.get(productID);
+
+            if(Integer.parseInt((String) quantity) == 0){
+                deleteProductInCart(productID);
+                return "removed product";
+            }
+
             double singleProductPrice = 0;
             String productImage = "";
             String productName = "";
@@ -221,6 +228,58 @@ public class MainService {
         confirmPayment(newOrder.getOrderID(), totalOrderAmount);
 
         return newOrder.getOrderID();
+    }
+
+    public List<Order> getOrders(){
+        return orderRepository.findAll();
+    }
+
+    public List<JSONObject> getSingleOrderDetails(String orderID){
+        List<JSONObject> jsonList = new ArrayList<>();
+
+        for(OrderDetails orderItem : orderDetailsRepository.findAll()){
+            JSONObject jsonOrderItem = new JSONObject(orderItem);
+
+            if(orderItem.getOrderID().equals(orderID)){
+                String productImage = "";
+                String productName = "";
+                double singleProductPrice = 0;
+                try{
+                    productImage = perishableRepository.findImageOfProduct(jsonOrderItem.getString("productID"));
+                    productName = perishableRepository.findNameOfProduct(jsonOrderItem.getString("productID"));
+                    singleProductPrice = perishableRepository.findPriceOfProduct(jsonOrderItem.getString("productID"));
+                }catch (Exception e){
+                    productImage = nonPerishableRepository.findImageOfProduct(jsonOrderItem.getString("productID"));
+                    productName = nonPerishableRepository.findNameOfProduct(jsonOrderItem.getString("productID"));
+                    singleProductPrice = nonPerishableRepository.findPriceOfProduct(jsonOrderItem.getString("productID"));
+                }
+                jsonOrderItem.put("productImage",productImage);
+                jsonOrderItem.put("productName",productName);
+                jsonOrderItem.put("singleProductPrice",singleProductPrice);
+                jsonList.add(jsonOrderItem);
+            }
+        }
+
+        return jsonList;
+    }
+
+    public void updateProcessedOrder(String orderID, String productID, int quantity){
+
+        System.out.println(orderDetailsRepository.findProductInOrder(orderID,productID));
+        String[] productDetails = orderDetailsRepository.findProductInOrder(orderID,productID).split(",");
+
+        int quantityInDB = Integer.parseInt(productDetails[4]);
+
+        double singleProductPrice = Double.parseDouble(productDetails[2]) / quantityInDB;
+        double totalMoneyOwed = Double.parseDouble(productDetails[5]);
+
+        if(quantity < quantityInDB){
+             totalMoneyOwed += (quantityInDB - quantity) * singleProductPrice;
+             double tempMoneyOwed = (quantityInDB - quantity) * singleProductPrice;
+            double currentPricePaid = Double.parseDouble(productDetails[2]) - tempMoneyOwed;
+
+            orderDetailsRepository.updateProductDetailsInOrder(orderID,productID,quantity,currentPricePaid,totalMoneyOwed);
+        }
     }
 
     public String confirmPayment(String orderID, double orderAmout){

@@ -74,8 +74,6 @@ $('#products tbody').on('click', 'tr', async function () {
 
                 if (response !== null && response.status === 200) {
                         location.reload()
-                } else {
-                        alert("some error occured!")
                 }
                 // console.log(productID)
         })
@@ -206,12 +204,15 @@ $('#cart tbody').on('click', 'tr', async function () {
                 var obj = {};
                 var response = null;
                 obj[productID] = quantity;
+                console.log(quantity)
+
                 if (quantity !== '' && quantity !== undefined) {
                         response = await fetch("http://localhost:8080/cart", {
                                 method: "POST",
                                 body: JSON.stringify(obj),
                         });
-                        console.log(response)
+                        obj = {}
+                        console.log(obj)
                 } else {
                         alert("Fill the quantity");
                 }
@@ -221,13 +222,174 @@ $('#cart tbody').on('click', 'tr', async function () {
                 } else {
                         alert("some error occured!")
                 }
-                // console.log(productID)
         })
 
 
 
 });
 
+const ordersTable = new DataTable('#orders', {
+        columns: [
+                {
+                        data: "Order ID",
+                        render: function (data, type, row) {
+                                return '<p>' + row[0] + '</p>'
+                        }
+                },
+                {
+                        data: "User ID",
+                        render: function (data, type, row) {
+                                return '<p>' + row[1] + '</p>'
+                        }
+                },
+                {
+                        data: "Date",
+                        render: function (data, type, row) {
+                                return '<p>' + row[2] + '</p>'
+                        }
+                },
+                {
+                        data: "Status",
+                        render: function (data, type, row) {
+                                return '<p>' + row[3] + '</p>'
+                        }
+                },
+                {
+                        data: "details",
+                        render: function (data, type, row) {
+                                return '<div> <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#orderInfoModal"> View Info </button> </div>  '
+                        }
+                }
+        ]
+});
+
+const ordersDetailsTable = new DataTable('#orderdetails', {
+        columns: [
+                {
+                        data: "Image",
+                        render: function (data, type, row) {
+                                return `<img src="${row[0]}" alt="img" width="150" height="100">`
+                        }
+                },
+                {
+                        data: "Name",
+                        render: function (data, type, row) {
+                                return '<p>' + row[1] + '</p>'
+                        }
+                },
+                {
+                        data: "ProductID",
+                        render: function (data, type, row) {
+                                return '<p>' + row[2] + '</p>'
+                        }
+                },
+                {
+                        data: "OrderID",
+                        render: function (data, type, row) {
+                                return '<p>' + row[3] + '</p>'
+                        }
+                },
+                {
+                        data: "Cost",
+                        render: function (data, type, row) {
+                                return '<p>' + row[4] + '</p>'
+                        }
+                },
+                {
+                        data: "Quantity",
+                        render: function (data, type, row) {
+                                return '<p>' + row[5] + '</p>'
+                        }
+                },
+                {
+                        data: "Update",
+                        render: function (data, type, row) {
+                                return '<div> <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#updateProductQuantityModal"> Update </button> </div>  '
+                        }
+                }
+        ]
+});
+
+$('#orders tbody').on('click', 'tr', async function () {
+        let text = "Add product to cart?"
+
+
+        var orderID = ordersTable.row(this).data()[0];
+
+
+        let request = new FormData();
+        request.append("orderID", orderID);
+
+        // console.log(orderID)
+        response = await fetch("http://localhost:8080/order-details", {
+                method: "POST",
+                body: request,
+        }).then(res => res.json()).then(json => {
+                ordersDetailsTable.clear().draw();
+
+                let orderAmount = 0;
+                let owedAmout = 0;
+                for (i = 0; i < json.length; i++) { 
+                        orderAmount += json[i].productAmount;
+                        owedAmout += json[i].amountOwed;
+                        ordersDetailsTable.row
+                                .add([
+                                        `C:/photos/${json[i].productImage}`,
+                                        json[i].productName,
+                                        json[i].productID,
+                                        json[i].orderID,
+                                        json[i].productAmount,
+                                        json[i].quantity,
+                                       "-"
+                                ])
+                                .draw(false);
+                }
+                document.getElementById('order-value').innerText = "Order Value: " + orderAmount;
+                document.getElementById('owed-value').innerText = "Amount Owed Back: " + owedAmout;
+                return json
+        });
+
+        
+
+});
+
+$('#orderdetails tbody').on('click', 'tr', async function () {
+
+        var productName = ordersDetailsTable.row(this).data()[1];
+        var productID = ordersDetailsTable.row(this).data()[2];
+        var orderID = ordersDetailsTable.row(this).data()[3];
+        var prevQuantity = ordersDetailsTable.row(this).data()[5];
+
+        document.getElementById('updateProductQuantityModalLabel').innerText = "Update for " + productName;
+
+        
+
+       
+
+        document.getElementById('update-product-button').addEventListener("click", async function () { 
+
+                var updatedQuantity = document.getElementById('updateProductQuantity').value;
+
+                let request = new FormData();
+                request.append("orderID", orderID);
+                request.append("productID", productID);
+                request.append("quantity", updatedQuantity);
+              
+                if (updatedQuantity < prevQuantity) {
+                        response = await fetch("http://localhost:8080/order-details", {
+                                method: "PUT",
+                                body: request,
+                        })
+                console.log(orderID + " " + productID + " " + updatedQuantity);
+                }
+                location.reload();
+                
+        })
+        
+     
+
+
+});
 
 
 async function loadTableData() {
@@ -308,6 +470,27 @@ async function loadCartData() {
 
 }
 
+async function loadOrdersData() {
+        fetch('http://localhost:8080/order')
+                .then(response => response.json())
+                .then(json => {
+
+                        for (i = 0; i < json.length; i++) {
+                                console.log(json[i])
+                                ordersTable.row
+                                        .add([
+                                                json[i].orderID,
+                                                json[i].userID,
+                                                json[i].orderDate,
+                                                json[i].status,
+                                                "-"
+                                        ])
+                                        .draw(false);
+
+                        }
+                })
+}
+
 //logic to send form details from adding a new product
 const addProductForm = document.querySelector("#add-product");
 
@@ -368,9 +551,9 @@ async function toDataURL(url, callback) {
 }
 
 async function confirmOrder() {
-        let text = "Place Order?"
+        let text = "Confirm and Pay?"
         let response = null;
-        if (confirm(text) == true) { 
+        if (confirm(text) == true) {
                 response = await fetch("http://localhost:8080/order", {
                         method: "POST",
                         body: JSON.stringify(cartProducts),
@@ -384,13 +567,14 @@ async function confirmOrder() {
         if (response !== null && response.status === 200) {
                 location.reload();
         }
-      
+
 }
 
 window.onload = async function () {
         $('#datepicker').datepicker();
         $('#expirydatepicker').datepicker();
 
+        await loadOrdersData();
         await loadTableData();
         await loadCartData();
 }
