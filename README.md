@@ -1,4 +1,4 @@
-![image](https://github.com/srisri332/groceryCRUDApp/assets/58304531/de7261ae-3cef-47a0-a4f0-8eb4b5a1fbe8)# DB Setup
+# DB Setup
 
  - Go to https://dev.mysql.com/downloads/installer/ 
  - Download the following mySQL installer, and start intallation 
