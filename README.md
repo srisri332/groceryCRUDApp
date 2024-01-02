@@ -27,7 +27,8 @@
 
  # Backend Setup
  - Make sure to have Java 17 installed in your computer. If not yet installed, you can do this from https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html using the Windows x64 MSI Installer. 
- - Create a folder named **photos** in your C: Drive. Make sure the folder name is correctly given as it is case sensitive. When you put "C:\photos" into the navigation bar is explorer, it should open up. 
+ - Create a folder named **photos** in your C: Drive. Make sure the folder name is correctly given as it is case sensitive. When you put "C:\photos" into the navigation bar is explorer, it should open up.
+ - Make sure MySQL80 service is running in Windows. This is the SQL Server. 
  - Go to https://www.jetbrains.com/idea/download/?section=windows and download the IntelliJ IDEA Community Edition. Install IntelliJ with all the default settings. 
  - Go to https://github.com/srisri332/groceryCRUDApp and download the code as zip. Extract the zip file to find the frontend, backend and resources folder. 
  - From IntelliJ, click on open and navigate to the backend folder as shown in the picture below. Click on ok and open the project. 
