@@ -21,6 +21,11 @@ public class MainController {
     @Autowired
     MainService mainService;
 
+    @GetMapping("/test")
+    public String test(){
+        return "Hellow World!";
+    }
+
     @GetMapping("/cart")
     public List<CartItem> cartDetails() {
         return mainService.getCartItems();
