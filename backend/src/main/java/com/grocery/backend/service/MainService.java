@@ -3,6 +3,7 @@ package com.grocery.backend.service;
 import com.grocery.backend.entity.*;
 import com.grocery.backend.repository.*;
 import org.aspectj.weaver.ast.Or;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,36 +54,46 @@ public class MainService {
     //Logic to save Non-Perishable product details in DB
     public String addProduct(MultipartFile productImage,
                              LocalDate manufacturedDate, String productName, double productPrice) throws IOException {
-        byte[] bytes = productImage.getBytes();
-        Path path = Paths.get(folder + productImage.getOriginalFilename());
-        Files.write(path, bytes);
+        try {
+            byte[] bytes = productImage.getBytes();
+            Path path = Paths.get(folder + productImage.getOriginalFilename());
+            Files.write(path, bytes);
 
-        NonPerishables nonPerishable = new NonPerishables();
-        nonPerishable.setManufacturedDate(manufacturedDate);
-        nonPerishable.setProductName(productName);
-        nonPerishable.setProductPrice(productPrice);
-        nonPerishable.setProductImage(productImage.getOriginalFilename());
-        nonPerishable.setCategory("Non-Perishables");
-        nonPerishableRepository.save(nonPerishable);
-        return null;
+            NonPerishables nonPerishable = new NonPerishables();
+            nonPerishable.setManufacturedDate(manufacturedDate);
+            nonPerishable.setProductName(productName);
+            nonPerishable.setProductPrice(productPrice);
+            nonPerishable.setProductImage(productImage.getOriginalFilename());
+            nonPerishable.setCategory("Non-Perishables");
+            nonPerishableRepository.save(nonPerishable);
+            return "success";
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "error";
+        }
     }
 
     //Logic to save Perishable product details in DB
     public String addProduct(MultipartFile productImage,
                              LocalDate manufacturedDate, LocalDate expiryDate, String productName, double productPrice) throws IOException {
-        byte[] bytes = productImage.getBytes();
-        Path path = Paths.get(folder + productImage.getOriginalFilename());
-        Files.write(path, bytes);
+        try {
+            byte[] bytes = productImage.getBytes();
+            Path path = Paths.get(folder + productImage.getOriginalFilename());
+            Files.write(path, bytes);
 
-        Perishables perishable = new Perishables();
-        perishable.setManufacturedDate(manufacturedDate);
-        perishable.setExpiryDate(expiryDate);
-        perishable.setProductName(productName);
-        perishable.setProductPrice(productPrice);
-        perishable.setProductImage(productImage.getOriginalFilename());
-        perishable.setCategory("Perishables");
-        perishableRepository.save(perishable);
-        return null;
+            Perishables perishable = new Perishables();
+            perishable.setManufacturedDate(manufacturedDate);
+            perishable.setExpiryDate(expiryDate);
+            perishable.setProductName(productName);
+            perishable.setProductPrice(productPrice);
+            perishable.setProductImage(productImage.getOriginalFilename());
+            perishable.setCategory("Perishables");
+            perishableRepository.save(perishable);
+            return "Success";
+        } catch (IOException e) {
+           e.printStackTrace();
+           return "error";
+        }
     }
 
     public List<Perishables> getPerishableProducts() {
@@ -126,57 +137,55 @@ public class MainService {
     //Logic to add / update / remove cart items in DB for admin user
     public String addOrUpdateCartItems(JSONObject requestJson) {
 
-        List<CartItem> cartItemsInDB = cartRepository.findAll();
-        ArrayList<String> currentCartItems = new ArrayList<>();
+        try{
+            List<CartItem> cartItemsInDB = cartRepository.findAll();
+            ArrayList<String> currentCartItems = new ArrayList<>();
 
-        String[] keys = JSONObject.getNames(requestJson);
+            String[] keys = JSONObject.getNames(requestJson);
 
-        for (String productID : keys) {
-            currentCartItems.add(productID);
-            boolean isInDB = cartItemsInDB.stream().anyMatch(o -> o.getProductID().equals(productID));
-            Object quantity = requestJson.get(productID);
+            for (String productID : keys) {
+                currentCartItems.add(productID);
+                boolean isInDB = cartItemsInDB.stream().anyMatch(o -> o.getProductID().equals(productID));
+                Object quantity = requestJson.get(productID);
 
-            if(Integer.parseInt((String) quantity) == 0){
-                deleteProductInCart(productID);
-                return "removed product";
+                if(Integer.parseInt((String) quantity) == 0){
+                    deleteProductInCart(productID);
+                    return "removed product";
+                }
+
+                double singleProductPrice = 0;
+                String productImage = "";
+                String productName = "";
+
+                try{
+                    singleProductPrice = perishableRepository.findPriceOfProduct(productID);
+                    productImage = perishableRepository.findImageOfProduct(productID);
+                    productName = perishableRepository.findNameOfProduct(productID);
+                }catch (Exception e){
+                    singleProductPrice = nonPerishableRepository.findPriceOfProduct(productID);
+                    productImage = nonPerishableRepository.findImageOfProduct(productID);
+                    productName = nonPerishableRepository.findNameOfProduct(productID);
+                }
+
+                double totalProductsPrice = singleProductPrice * Integer.parseInt((String) quantity);
+                if (isInDB) {
+                    cartRepository.updateCartValues(productID, Integer.parseInt((String) quantity), totalProductsPrice);
+                } else {
+                    CartItem cartItem = new CartItem();
+                    cartItem.setUserID(userID);
+                    cartItem.setProductName(productName);
+                    cartItem.setProductImage(productImage);
+                    cartItem.setProductID(productID);
+                    cartItem.setQuantity(Integer.parseInt((String) quantity));
+                    cartItem.setProductAmount(totalProductsPrice);
+                    cartRepository.save(cartItem);
+                }
             }
-
-            double singleProductPrice = 0;
-            String productImage = "";
-            String productName = "";
-
-            try{
-                 singleProductPrice = perishableRepository.findPriceOfProduct(productID);
-                 productImage = perishableRepository.findImageOfProduct(productID);
-                 productName = perishableRepository.findNameOfProduct(productID);
-            }catch (Exception e){
-                singleProductPrice = nonPerishableRepository.findPriceOfProduct(productID);
-                productImage = nonPerishableRepository.findImageOfProduct(productID);
-                productName = nonPerishableRepository.findNameOfProduct(productID);
-            }
-
-            double totalProductsPrice = singleProductPrice * Integer.parseInt((String) quantity);
-            if (isInDB) {
-                cartRepository.updateCartValues(productID, Integer.parseInt((String) quantity), totalProductsPrice);
-            } else {
-                CartItem cartItem = new CartItem();
-                cartItem.setUserID(userID);
-                cartItem.setProductName(productName);
-                cartItem.setProductImage(productImage);
-                cartItem.setProductID(productID);
-                cartItem.setQuantity(Integer.parseInt((String) quantity));
-                cartItem.setProductAmount(totalProductsPrice);
-                cartRepository.save(cartItem);
-            }
+            return "success";
+        }catch (Exception e){
+            e.printStackTrace();
+            return "error";
         }
-
-//        for (CartItem singleItem : cartItemsInDB) {
-//            if (!currentCartItems.contains(singleItem.getProductID())) {
-//                cartRepository.deleteByProductID(singleItem.getProductID());
-//            }
-//        }
-
-        return "Success";
     }
 
     public String deleteProductInCart(String productID){
@@ -185,7 +194,6 @@ public class MainService {
         }catch (Exception e){
             return "error";
         }
-
         return "Success";
     }
 
@@ -195,39 +203,43 @@ public class MainService {
 
     public String confirmOrder(JSONObject requestJson){
 
-        Order newOrder = new Order();
-        newOrder.setUserID(userID);
-        newOrder.setOrderDate(LocalDateTime.now());
-        newOrder.setStatus("Placed");
-        orderRepository.save(newOrder);
+        Order newOrder = null;
+        try {
+            newOrder = new Order();
+            newOrder.setUserID(userID);
+            newOrder.setOrderDate(LocalDateTime.now());
+            newOrder.setStatus("Placed");
+            orderRepository.save(newOrder);
 
-        double totalOrderAmount = 0;
-        String[] keys = JSONObject.getNames(requestJson);
-        for (String productID : keys) {
-            double singleProductPrice = 0;
-            Object quantity = requestJson.get(productID);
+            double totalOrderAmount = 0;
+            String[] keys = JSONObject.getNames(requestJson);
+            for (String productID : keys) {
+                double singleProductPrice = 0;
+                Object quantity = requestJson.get(productID);
 
-            try{
-                singleProductPrice = perishableRepository.findPriceOfProduct(productID);
-            }catch (Exception e){
-                singleProductPrice = nonPerishableRepository.findPriceOfProduct(productID);
+                try{
+                    singleProductPrice = perishableRepository.findPriceOfProduct(productID);
+                }catch (Exception e){
+                    singleProductPrice = nonPerishableRepository.findPriceOfProduct(productID);
+                }
+                double totalProductsPrice = singleProductPrice * (Integer) quantity;
+                totalOrderAmount += totalProductsPrice;
+
+                OrderDetails newOrderDetails = new OrderDetails();
+                newOrderDetails.setProductID(productID);
+                newOrderDetails.setQuantity((Integer) quantity);
+                newOrderDetails.setOrderID(newOrder.getOrderID());
+                newOrderDetails.setProductAmount(totalProductsPrice);
+                orderDetailsRepository.save(newOrderDetails);
+
+                deleteProductInCart(productID);
             }
-            double totalProductsPrice = singleProductPrice * (Integer) quantity;
-            totalOrderAmount += totalProductsPrice;
 
-            OrderDetails newOrderDetails = new OrderDetails();
-            newOrderDetails.setProductID(productID);
-            newOrderDetails.setQuantity((Integer) quantity);
-            newOrderDetails.setOrderID(newOrder.getOrderID());
-            newOrderDetails.setProductAmount(totalProductsPrice);
-            orderDetailsRepository.save(newOrderDetails);
-
-            deleteProductInCart(productID);
+            confirmPayment(newOrder.getOrderID(), totalOrderAmount);
+            return newOrder.getOrderID();
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
         }
-
-        confirmPayment(newOrder.getOrderID(), totalOrderAmount);
-
-        return newOrder.getOrderID();
     }
 
     public List<Order> getOrders(){
@@ -235,59 +247,72 @@ public class MainService {
     }
 
     public List<JSONObject> getSingleOrderDetails(String orderID){
-        List<JSONObject> jsonList = new ArrayList<>();
+        try {
+            List<JSONObject> jsonList = new ArrayList<>();
 
-        for(OrderDetails orderItem : orderDetailsRepository.findAll()){
-            JSONObject jsonOrderItem = new JSONObject(orderItem);
+            for(OrderDetails orderItem : orderDetailsRepository.findAll()){
+                JSONObject jsonOrderItem = new JSONObject(orderItem);
 
-            if(orderItem.getOrderID().equals(orderID)){
-                String productImage = "";
-                String productName = "";
-                double singleProductPrice = 0;
-                try{
-                    productImage = perishableRepository.findImageOfProduct(jsonOrderItem.getString("productID"));
-                    productName = perishableRepository.findNameOfProduct(jsonOrderItem.getString("productID"));
-                    singleProductPrice = perishableRepository.findPriceOfProduct(jsonOrderItem.getString("productID"));
-                }catch (Exception e){
-                    productImage = nonPerishableRepository.findImageOfProduct(jsonOrderItem.getString("productID"));
-                    productName = nonPerishableRepository.findNameOfProduct(jsonOrderItem.getString("productID"));
-                    singleProductPrice = nonPerishableRepository.findPriceOfProduct(jsonOrderItem.getString("productID"));
+                if(orderItem.getOrderID().equals(orderID)){
+                    String productImage = "";
+                    String productName = "";
+                    double singleProductPrice = 0;
+                    try{
+                        productImage = perishableRepository.findImageOfProduct(jsonOrderItem.getString("productID"));
+                        productName = perishableRepository.findNameOfProduct(jsonOrderItem.getString("productID"));
+                        singleProductPrice = perishableRepository.findPriceOfProduct(jsonOrderItem.getString("productID"));
+                    }catch (Exception e){
+                        productImage = nonPerishableRepository.findImageOfProduct(jsonOrderItem.getString("productID"));
+                        productName = nonPerishableRepository.findNameOfProduct(jsonOrderItem.getString("productID"));
+                        singleProductPrice = nonPerishableRepository.findPriceOfProduct(jsonOrderItem.getString("productID"));
+                    }
+                    jsonOrderItem.put("productImage",productImage);
+                    jsonOrderItem.put("productName",productName);
+                    jsonOrderItem.put("singleProductPrice",singleProductPrice);
+                    jsonList.add(jsonOrderItem);
                 }
-                jsonOrderItem.put("productImage",productImage);
-                jsonOrderItem.put("productName",productName);
-                jsonOrderItem.put("singleProductPrice",singleProductPrice);
-                jsonList.add(jsonOrderItem);
             }
-        }
 
-        return jsonList;
+            return jsonList;
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void updateProcessedOrder(String orderID, String productID, int quantity){
+        try {
+            System.out.println(orderDetailsRepository.findProductInOrder(orderID,productID));
 
-        System.out.println(orderDetailsRepository.findProductInOrder(orderID,productID));
-        String[] productDetails = orderDetailsRepository.findProductInOrder(orderID,productID).split(",");
+            //signature of productDetails = orderDetailsID,orderID,productAmount,productID,quantity,amountOwed
+            String[] productDetails = orderDetailsRepository.findProductInOrder(orderID,productID).split(",");
 
-        int quantityInDB = Integer.parseInt(productDetails[4]);
+            int quantityInDB = Integer.parseInt(productDetails[4]);
+            double singleProductPrice = Double.parseDouble(productDetails[2]) / quantityInDB;
+            double totalMoneyOwed = Double.parseDouble(productDetails[5]);
 
-        double singleProductPrice = Double.parseDouble(productDetails[2]) / quantityInDB;
-        double totalMoneyOwed = Double.parseDouble(productDetails[5]);
+            if(Math.abs(quantity) < quantityInDB){
+                double tempMoneyOwed = (quantityInDB - Math.abs(quantity)) * singleProductPrice;
+                 totalMoneyOwed += tempMoneyOwed;
+                double currentPricePaid = Double.parseDouble(productDetails[2]) - tempMoneyOwed;
 
-        if(quantity < quantityInDB){
-             totalMoneyOwed += (quantityInDB - quantity) * singleProductPrice;
-             double tempMoneyOwed = (quantityInDB - quantity) * singleProductPrice;
-            double currentPricePaid = Double.parseDouble(productDetails[2]) - tempMoneyOwed;
-
-            orderDetailsRepository.updateProductDetailsInOrder(orderID,productID,quantity,currentPricePaid,totalMoneyOwed);
+                orderDetailsRepository.updateProductDetailsInOrder(orderID,productID,Math.abs(quantity),currentPricePaid,totalMoneyOwed);
+            }
+        } catch (NumberFormatException e) {
+           e.printStackTrace();
         }
     }
 
     public String confirmPayment(String orderID, double orderAmout){
-        Payment newPayment = new Payment();
-        newPayment.setOrderID(orderID);
-        newPayment.setAmount(orderAmout);
-        paymentRepository.save(newPayment);
-        return "Success";
+        try {
+            Payment newPayment = new Payment();
+            newPayment.setOrderID(orderID);
+            newPayment.setAmount(orderAmout);
+            paymentRepository.save(newPayment);
+            return "Success";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "error";
+        }
     }
 
 }

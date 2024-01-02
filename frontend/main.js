@@ -1,4 +1,5 @@
 var cartProducts = {};
+var backendURL = "http://localhost:8080";
 
 const shopTable = new DataTable('#products', {
         columns: [
@@ -63,7 +64,7 @@ $('#products tbody').on('click', 'tr', async function () {
                 var response = null;
                 obj[productID] = quantity;
                 if (quantity !== '' && quantity !== undefined) {
-                        response = await fetch("http://localhost:8080/cart", {
+                        response = await fetch(backendURL + "/cart", {
                                 method: "POST",
                                 body: JSON.stringify(obj),
                         });
@@ -75,7 +76,7 @@ $('#products tbody').on('click', 'tr', async function () {
                 if (response !== null && response.status === 200) {
                         location.reload()
                 }
-                // console.log(productID)
+
         })
 
 
@@ -126,13 +127,13 @@ $('#edit-products tbody').on('click', 'tr', async function () {
                 let response = null;
 
                 if (productCategory === "Perishables") {
-                        response = await fetch("http://localhost:8080/perishable", {
+                        response = await fetch(backendURL + "/perishable", {
                                 method: "DELETE",
                                 body: deleteRequest,
                         });
 
                 } else {
-                        response = await fetch("http://localhost:8080/nonperishable", {
+                        response = await fetch(backendURL + "/nonperishable", {
                                 method: "DELETE",
                                 body: deleteRequest,
                         });
@@ -204,15 +205,13 @@ $('#cart tbody').on('click', 'tr', async function () {
                 var obj = {};
                 var response = null;
                 obj[productID] = quantity;
-                console.log(quantity)
 
                 if (quantity !== '' && quantity !== undefined) {
-                        response = await fetch("http://localhost:8080/cart", {
+                        response = await fetch(backendURL + "/cart", {
                                 method: "POST",
                                 body: JSON.stringify(obj),
                         });
                         obj = {}
-                        console.log(obj)
                 } else {
                         alert("Fill the quantity");
                 }
@@ -320,8 +319,7 @@ $('#orders tbody').on('click', 'tr', async function () {
         let request = new FormData();
         request.append("orderID", orderID);
 
-        // console.log(orderID)
-        response = await fetch("http://localhost:8080/order-details", {
+        response = await fetch(backendURL + "/order-details", {
                 method: "POST",
                 body: request,
         }).then(res => res.json()).then(json => {
@@ -329,7 +327,7 @@ $('#orders tbody').on('click', 'tr', async function () {
 
                 let orderAmount = 0;
                 let owedAmout = 0;
-                for (i = 0; i < json.length; i++) { 
+                for (i = 0; i < json.length; i++) {
                         orderAmount += json[i].productAmount;
                         owedAmout += json[i].amountOwed;
                         ordersDetailsTable.row
@@ -340,7 +338,7 @@ $('#orders tbody').on('click', 'tr', async function () {
                                         json[i].orderID,
                                         json[i].productAmount,
                                         json[i].quantity,
-                                       "-"
+                                        "-"
                                 ])
                                 .draw(false);
                 }
@@ -349,7 +347,7 @@ $('#orders tbody').on('click', 'tr', async function () {
                 return json
         });
 
-        
+
 
 });
 
@@ -362,11 +360,11 @@ $('#orderdetails tbody').on('click', 'tr', async function () {
 
         document.getElementById('updateProductQuantityModalLabel').innerText = "Update for " + productName;
 
-        
 
-       
 
-        document.getElementById('update-product-button').addEventListener("click", async function () { 
+
+
+        document.getElementById('update-product-button').addEventListener("click", async function () {
 
                 var updatedQuantity = document.getElementById('updateProductQuantity').value;
 
@@ -374,26 +372,25 @@ $('#orderdetails tbody').on('click', 'tr', async function () {
                 request.append("orderID", orderID);
                 request.append("productID", productID);
                 request.append("quantity", updatedQuantity);
-              
+
                 if (updatedQuantity < prevQuantity) {
-                        response = await fetch("http://localhost:8080/order-details", {
+                        response = await fetch(backendURL + "/order-details", {
                                 method: "PUT",
                                 body: request,
                         })
-                console.log(orderID + " " + productID + " " + updatedQuantity);
                 }
                 location.reload();
-                
+
         })
-        
-     
+
+
 
 
 });
 
 
 async function loadTableData() {
-        fetch('http://localhost:8080/perishable')
+        fetch(backendURL + "/perishable")
                 .then(response => response.json())
                 .then(json => {
                         for (i = 0; i < json.length; i++) {
@@ -418,7 +415,7 @@ async function loadTableData() {
                         }
                 })
 
-        fetch('http://localhost:8080/nonperishable')
+        fetch(backendURL + "/nonperishable")
                 .then(response => response.json())
                 .then(json => {
                         for (i = 0; i < json.length; i++) {
@@ -446,7 +443,7 @@ async function loadTableData() {
 
 async function loadCartData() {
         var cartValue = 0;
-        fetch('http://localhost:8080/cart')
+        fetch(backendURL + "/cart")
                 .then(response => response.json())
                 .then(json => {
                         for (i = 0; i < json.length; i++) {
@@ -471,12 +468,11 @@ async function loadCartData() {
 }
 
 async function loadOrdersData() {
-        fetch('http://localhost:8080/order')
+        fetch(backendURL + "/order")
                 .then(response => response.json())
                 .then(json => {
 
                         for (i = 0; i < json.length; i++) {
-                                console.log(json[i])
                                 ordersTable.row
                                         .add([
                                                 json[i].orderID,
@@ -509,14 +505,14 @@ async function sendData() {
 
         try {
                 if (category === "perishable") {
-                        const response = await fetch("http://localhost:8080/perishable", {
+                        const response = await fetch(backendURL + "/perishable", {
                                 method: "POST",
                                 // Set the FormData instance as the request body
                                 body: formData,
                         });
                         console.log(await response);
                 } else {
-                        const response = await fetch("http://localhost:8080/nonperishable", {
+                        const response = await fetch(backendURL + "/nonperishable", {
                                 method: "POST",
                                 // Set the FormData instance as the request body
                                 body: formData,
@@ -554,12 +550,10 @@ async function confirmOrder() {
         let text = "Confirm and Pay?"
         let response = null;
         if (confirm(text) == true) {
-                response = await fetch("http://localhost:8080/order", {
+                response = await fetch(backendURL + "/order", {
                         method: "POST",
                         body: JSON.stringify(cartProducts),
                 });
-                console.log(response)
-                console.log(cartProducts)
         } else {
                 text = "Cancelled!"
         }

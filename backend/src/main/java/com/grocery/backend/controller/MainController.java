@@ -4,7 +4,6 @@ import com.grocery.backend.entity.*;
 import com.grocery.backend.service.MainService;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +12,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -67,14 +65,15 @@ public class MainController {
         return res;
     }
 
-    @DeleteMapping("/order")
-    public String deleteItemsInOrder() {
-        return "order delete";
-    }
 
     @PostMapping(path = "/order-details", produces = MediaType.APPLICATION_JSON_VALUE)
     public String orderSingleOrderDetails(@RequestParam("orderID") String orderID) {
-        return mainService.getSingleOrderDetails(orderID).toString();
+        try {
+            return mainService.getSingleOrderDetails(orderID).toString();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "error";
     }
 
     @PutMapping("/order-details")
@@ -99,16 +98,17 @@ public class MainController {
         LocalDate expiryDateConv = LocalDate.parse(expiryDate, formatter);
         try {
             mainService.addProduct(productImage, manufacturedDateConv, expiryDateConv, productName, productPrice);
+            return "success";
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
-        return "perishable confirm";
+        return "error";
     }
 
     @DeleteMapping("/perishable")
     public String deletePerishableItem(@RequestParam("productID") String productID) {
         mainService.removePerishableProduct(productID);
-        return "perishable delete";
+        return "success";
     }
 
     @GetMapping("/nonperishable")
@@ -128,7 +128,7 @@ public class MainController {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return "nonperishable confirm";
+        return "success";
     }
 
     @DeleteMapping("/nonperishable")
@@ -137,20 +137,6 @@ public class MainController {
         return "nonperishable delete";
     }
 
-    @PostMapping("/payment")
-    public String confirmPayment() {
-        return "nonperishable confirm";
-    }
-
-    @PostMapping("/image")
-    public String uploadImage(@RequestParam("productImage") MultipartFile productImage) {
-//        try {
-//            mainService.addProduct(productImage);
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-        return "upload";
-    }
 
     @GetMapping("/image/{productImage}")
     public ResponseEntity<?> fetchImage(@PathVariable String productImage) {
